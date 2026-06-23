@@ -1,6 +1,6 @@
 # EmpathWrite AI
 
-A premium, full-stack AI Blog Generator built on the MERN stack. EmpathWrite goes beyond robotic AI text generation by focusing on collaborative co-writing, humanization filters, dynamic audience persona alignment, and a fluid, polished editor experience — powered by the Google Gemini API.
+A premium, full-stack AI Blog Generator built on the MERN stack. EmpathWrite goes beyond robotic AI text generation by focusing on collaborative co-writing, humanization filters, dynamic audience persona alignment, and a fluid, polished editor experience — powered by the **Groq API** (Llama-3.3-70b-versatile).
 
 ---
 
@@ -8,11 +8,21 @@ A premium, full-stack AI Blog Generator built on the MERN stack. EmpathWrite goe
 
 - **Secure Auth** — JWT stored in HTTP-Only cookies; passwords hashed with bcrypt (10 salt rounds)
 - **Audience Alignment Wizard** — Multi-step onboarding wizard to configure target demographic, objective, and narrative tone using Framer Motion slide animations
-- **Structured Outline Builder** — Gemini-powered JSON blueprint generator (H2/H3 hierarchy) with full drag-and-reorder controls
-- **Real-Time SSE Streaming** — Token-by-token content delivery from Gemini directly into a TipTap rich text canvas
+- **Structured Outline Builder** — AI-powered JSON blueprint generator (H2/H3 hierarchy) with full drag-and-reorder controls
+- **Real-Time SSE Streaming** — Token-by-token content delivery from Groq directly into a TipTap rich text canvas
 - **Inline AI Context Menu** — Highlight any text to trigger a floating action menu: Humanize, Expand, Condense, and Tone shift
 - **Anti-AI Phrasing Engine** — Systemic prompt directives that strip corporate filler phrases and enforce natural, varied sentence cadence
-- **Mock Mode** — Full end-to-end functionality without a Gemini API key, for development and testing
+- **Mock Mode** — Full end-to-end functionality without a Groq API key, for development and testing
+
+---
+
+## Architecture & Data Flow
+
+EmpathWrite AI leverages a decoupled architecture to ensure seamless real-time interactions:
+1. **Frontend (React/Vite)**: The user configures a blog's metadata and interacts with a rich text editor (TipTap). It sends requests to the backend for outline generation, inline text modifications, and content streaming.
+2. **Backend (Node.js/Express)**: Acts as a secure orchestrator. It verifies user sessions (JWT), stores blog data in MongoDB, and communicates securely with the LLM API.
+3. **AI Generation (Groq/Llama-3)**: The backend routes (`/api/blogs/...`) build complex, customized system prompts encompassing the user's audience persona, tone, and the 'Anti-AI' directives. These are sent to Groq.
+4. **Streaming (SSE)**: For full article generation, the backend uses Server-Sent Events (SSE) to pipe tokens token-by-token from Groq directly to the frontend's TipTap editor, providing a real-time typing experience.
 
 ---
 
@@ -23,7 +33,7 @@ A premium, full-stack AI Blog Generator built on the MERN stack. EmpathWrite goe
 | Frontend | React 18, Vite, Tailwind CSS v4, Framer Motion, TipTap, Axios |
 | Backend | Node.js, Express.js, Mongoose |
 | Database | MongoDB |
-| AI | Google Gemini API (`@google/generative-ai`) |
+| AI | Groq API (`groq-sdk`) running Llama-3.3-70b-versatile |
 | Auth | JWT, bcrypt, HTTP-Only Cookies |
 
 ---
@@ -71,7 +81,7 @@ AI-Blog-Generator/
 
 - Node.js v18+
 - MongoDB running locally on `mongodb://127.0.0.1:27017` (or a MongoDB Atlas URI)
-- A Google Gemini API key (optional — app runs in mock mode without one)
+- A Groq API key (optional — app runs in mock mode without one)
 
 ### 1. Clone the repository
 
@@ -94,10 +104,11 @@ PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/empathwrite
 JWT_SECRET=your_strong_secret_here
 GEMINI_API_KEY=your_gemini_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
 NODE_ENV=development
 ```
 
-> If `GEMINI_API_KEY` is not set, the app automatically falls back to **Mock Mode** — all AI endpoints return pre-defined structured responses for testing.
+> If `GROQ_API_KEY` is not set, the app automatically falls back to **Mock Mode** — all AI endpoints return pre-defined structured responses for testing.
 
 ### 3. Install dependencies
 
@@ -137,7 +148,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | `GET` | `/api/blogs/:id` | Fetch a single blog | Yes |
 | `PUT` | `/api/blogs/:id/save` | Save editor content | Yes |
 | `DELETE` | `/api/blogs/:id` | Delete a blog | Yes |
-| `POST` | `/api/blogs/:id/outline` | Generate structured JSON outline via Gemini | Yes |
+| `POST` | `/api/blogs/:id/outline` | Generate structured JSON outline via Groq | Yes |
 | `GET` | `/api/blogs/:id/stream` | Stream blog content via SSE | Yes |
 | `POST` | `/api/blogs/inline-edit` | Transform selected text (Humanize, Expand, Condense, Tone) | Yes |
 
@@ -150,14 +161,14 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | `PORT` | No | Backend port (default: `5000`) |
 | `MONGO_URI` | Yes | MongoDB connection string |
 | `JWT_SECRET` | Yes | Secret key for signing JWTs |
-| `GEMINI_API_KEY` | No | Google Gemini API key. Falls back to mock mode if unset. |
+| `GROQ_API_KEY` | No | Groq API key for Llama model. Falls back to mock mode if unset. |
 | `NODE_ENV` | No | `development` or `production` |
 
 ---
 
 ## Security Notes
 
-- The Gemini API key is **strictly server-side** — never exposed to the client
+- The Groq API key is **strictly server-side** — never exposed to the client
 - All cookies are `HttpOnly`, `SameSite: strict`, and `Secure` in production
 - All protected routes validate the JWT on every request via the `protect` middleware
 - IDOR protection enforced on all blog operations: queries always filter by both `_id` and `userId`

@@ -31,8 +31,7 @@ app.use(helmet({
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://bloggenerator-68x6.onrender.com',
-  'https://blog-generator-eight.vercel.app'  // ← Use your Vercel URL
+  process.env.FRONTEND_URL || 'https://blog-generator-eight.vercel.app'
 ];
 
 app.use(cors({
