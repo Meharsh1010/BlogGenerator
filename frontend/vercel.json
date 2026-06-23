@@ -1,9 +1,0 @@
-# Vercel Deployment Configuration
-{
-  "env": [
-    {
-      "key": "VITE_API_BASE_URL",
-      "value": "https://bloggenerator-68x6.onrender.com"
-    }
-  ]
-}
