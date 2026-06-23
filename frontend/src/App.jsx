@@ -11,7 +11,11 @@ import CommunityFeed from './pages/CommunityFeed.jsx';
 import BlogDetails from './pages/BlogDetails.jsx';
 import UserProfile from './pages/UserProfile.jsx';
 
+// Import API Config
+import { API_BASE_URL } from './config/api.js';
+
 // Configure Axios Defaults
+axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
 
 const AuthContext = createContext(null);
