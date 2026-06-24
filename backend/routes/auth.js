@@ -6,6 +6,9 @@ import protect from '../middleware/auth.js';
 
 const router = express.Router();
 
+// True when running on a real deployment (Render), not local dev
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || !!process.env.FRONTEND_URL;
+
 // Helper to generate JWT and set HTTP-only cookie
 const sendTokenResponse = (user, statusCode, res) => {
   const token = jwt.sign(
@@ -17,8 +20,8 @@ const sendTokenResponse = (user, statusCode, res) => {
   const cookieOptions = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+    secure: IS_PRODUCTION,
+    sameSite: IS_PRODUCTION ? 'none' : 'strict'
   };
 
   res.status(statusCode)
@@ -123,8 +126,8 @@ router.post('/logout', (req, res) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000), // expires in 10s
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+    secure: IS_PRODUCTION,
+    sameSite: IS_PRODUCTION ? 'none' : 'strict'
   });
 
   res.status(200).json({ success: true, message: 'Logged out successfully' });

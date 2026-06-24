@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 import dns from 'dns';
 import connectDB from './config/db.js';
 
+// Load environment variables FIRST before anything else
+dotenv.config();
+
 // Configure public DNS resolvers to bypass misconfigured local router/VPN DNS servers (fixes Atlas SRV lookups)
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
@@ -14,9 +17,6 @@ import authRoutes from './routes/auth.js';
 import blogRoutes from './routes/blogs.js';
 import generateRoutes from './routes/generate.js';
 import commentRoutes from './routes/comments.js';
-
-// Load environment variables
-dotenv.config();
 
 // Connect to Database
 connectDB();
@@ -31,15 +31,18 @@ app.use(helmet({
 
 const allowedOrigins = [
   'http://localhost:5173',
-  process.env.FRONTEND_URL || 'https://blog-generator-eight.vercel.app'
+  (process.env.FRONTEND_URL || 'https://blog-generator-eight.vercel.app').replace(/\/$/, '')
 ];
+
+console.log('Allowed CORS origins:', allowedOrigins);
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`CORS blocked origin: "${origin}"`);
+      callback(null, false); // Reject without throwing — avoids polluting error logs
     }
   },
   credentials: true,
@@ -57,6 +60,11 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// Root route
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'BlogGenerator API is running 🚀', status: 'ok' });
+});
+
 // Health Check
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', time: new Date() });
@@ -67,6 +75,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/blogs', generateRoutes); // Merged outline, stream, inline-edit routes under /api/blogs
 app.use('/api/comments', commentRoutes);
+
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({ error: `Route ${req.method} ${req.originalUrl} not found` });
+});
 
 // Global error handler middleware
 app.use((err, req, res, next) => {
