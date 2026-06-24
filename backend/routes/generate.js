@@ -166,7 +166,20 @@ router.get('/:id/stream', protect, async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Content-Encoding', 'none');
+    res.setHeader('Content-Encoding', 'identity');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering on Render
+    res.flushHeaders(); // Establish SSE connection immediately before Groq starts
+
+    // Heartbeat: ping every 20s to keep Render's proxy from dropping idle connections
+    let clientConnected = true;
+    const heartbeat = setInterval(() => {
+      if (clientConnected) res.write(': heartbeat\n\n');
+    }, 20000);
+
+    req.on('close', () => {
+      clientConnected = false;
+      clearInterval(heartbeat);
+    });
 
     const antiAIInstruction = `
       CRITICAL: You must bypass corporate clichés and robotic structural patterns. Never use introductory filler phrases like 'In today's fast-paced digital landscape', 'It is important to remember', 'Moreover', or 'Furthermore'. Avoid repeating the main keyword unnaturally. Write with conversational cadence, using varied sentence lengths (alternating short, punched statements with occasional descriptive complex sentences) to ensure a high human-readability profile.
@@ -202,14 +215,17 @@ router.get('/:id/stream', protect, async (req, res) => {
     });
 
     let fullText = '';
-    
+
     for await (const chunk of stream) {
+      if (!clientConnected) break; // Client disconnected mid-stream
       const chunkText = chunk.choices[0]?.delta?.content || '';
       if (chunkText) {
         fullText += chunkText;
         res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
       }
     }
+
+    clearInterval(heartbeat);
 
     // Save fully generated text to MongoDB
     blog.content = fullText;
@@ -219,8 +235,13 @@ router.get('/:id/stream', protect, async (req, res) => {
     res.end();
   } catch (error) {
     console.error(`Streaming Generative Error: ${error.message}`);
-    res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
-    res.end();
+    if (typeof heartbeat !== 'undefined') clearInterval(heartbeat);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+      res.end();
+    }
   }
 });
 

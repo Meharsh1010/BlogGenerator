@@ -24,11 +24,6 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security & Body parsing Middlewares
-app.use(helmet({
-  contentSecurityPolicy: false, // Turn off CSP for easy local asset loading/SSE
-}));
-
 const allowedOrigins = [
   'http://localhost:5173',
   (process.env.FRONTEND_URL || 'https://blog-generator-eight.vercel.app').replace(/\/$/, '')
@@ -36,24 +31,37 @@ const allowedOrigins = [
 
 console.log('Allowed CORS origins:', allowedOrigins);
 
+// CORS must come BEFORE helmet so headers are set on every response
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.warn(`CORS blocked origin: "${origin}"`);
-      callback(null, false); // Reject without throwing — avoids polluting error logs
+      callback(null, false);
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Handle preflight OPTIONS requests immediately (before helmet touches them)
+app.options('*', cors());
+
+// Security middlewares — crossOriginResourcePolicy disabled so cross-origin
+// API responses are not blocked by CORP after CORS headers are set
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: false, // Allows cross-origin fetch for API responses
+}));
+
 app.use(express.json());
 app.use(cookieParser());
 
-// Disable caching for dynamic API responses to prevent back-navigation stale reads
+// Disable caching for dynamic API responses — skip SSE stream routes (they manage their own headers)
 app.use('/api', (req, res, next) => {
+  if (req.path.endsWith('/stream')) return next(); // SSE manages its own cache headers
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
