@@ -5,8 +5,8 @@ import StarterKit from '@tiptap/starter-kit';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api.js';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { 
-  ArrowLeft, Save, CheckCircle, Sparkles, Plus, Trash2, 
+import {
+  ArrowLeft, Save, CheckCircle, Sparkles, Plus, Trash2,
   ArrowUp, ArrowDown, ChevronRight, Edit2, Play, Eye, EyeOff, HelpCircle,
   Download, FileText, X
 } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function EditorPage() {
   const [streaming, setStreaming] = useState(false);
   const [saveStatus, setSaveStatus] = useState('Saved'); // 'Saved' | 'Unsaved Changes' | 'Saving...'
   const [error, setError] = useState('');
-  
+
   // Custom bubble menu states
   const [showBubbleMenu, setShowBubbleMenu] = useState(false);
   const [bubbleMenuPos, setBubbleMenuPos] = useState({ top: 0, left: 0 });
@@ -81,7 +81,7 @@ export default function EditorPage() {
         const { view } = editor;
         const start = view.coordsAtPos(from);
         const end = view.coordsAtPos(to);
-        
+
         // Compute positioning centered above the highlighted block
         const editorContainer = view.dom.getBoundingClientRect();
         const top = start.top - editorContainer.top + view.dom.parentElement.scrollTop - 48;
@@ -170,7 +170,7 @@ export default function EditorPage() {
     editor.commands.setContent('<p className="shimmer-text">Aligning cognitive models and initializing streams...</p>');
 
     let accumulatedHtml = '';
-    const eventSource = new EventSource(`${API_BASE_URL}/api/blogs/${id}/stream`, { withCredentials: true });
+    const eventSource = new EventSource(`${API_BASE_URL}api/blogs/${id}/stream`, { withCredentials: true });
 
     eventSource.onmessage = (event) => {
       if (event.data === '[DONE]') {
@@ -188,7 +188,7 @@ export default function EditorPage() {
             setStreaming(false);
             return;
           }
-          
+
           if (accumulatedHtml === '') {
             // Clear the placeholder shimmer text on first token
             editor.commands.setContent('');
@@ -220,7 +220,7 @@ export default function EditorPage() {
         action,
         tone: tonePreset
       };
-      
+
       const { data } = await axios.post('/api/blogs/inline-edit', payload);
       if (data.success && data.text) {
         const { from, to } = editor.state.selection;
@@ -257,7 +257,7 @@ export default function EditorPage() {
   const moveOutlineSection = (index, direction) => {
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === blog.outline.length - 1) return;
-    
+
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     const updatedOutline = [...blog.outline];
     const temp = updatedOutline[index];
@@ -329,7 +329,7 @@ export default function EditorPage() {
     const title = blog?.title || 'Untitled Blog';
     const text = editor.getText();
     const fileContent = `${title}\n\n${text}`;
-    
+
     const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -365,7 +365,7 @@ export default function EditorPage() {
       const addText = (text, fontSize, isBold = false, spacingAfter = 6, indent = 0) => {
         doc.setFont('helvetica', isBold ? 'bold' : 'normal');
         doc.setFontSize(fontSize);
-        
+
         const wrappedText = doc.splitTextToSize(text, contentWidth - indent);
         const lineHeight = fontSize * 0.3527 * 1.25;
         const totalHeight = wrappedText.length * lineHeight;
@@ -440,13 +440,13 @@ export default function EditorPage() {
       {/* Editor Header Navigation */}
       <header className="h-16 border-b border-slate-200 dark:border-white/5 bg-[#faf8f5]/85 dark:bg-aether-obsidian/40 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-30 shadow-sm transition-all duration-300">
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={() => navigate('/dashboard')}
             className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition cursor-pointer"
           >
             <ArrowLeft size={18} />
           </button>
-          
+
           <input
             type="text"
             className="bg-transparent border-none text-slate-905 dark:text-white font-bold text-lg focus:outline-none focus:ring-0 w-64 sm:w-96 truncate"
@@ -457,11 +457,10 @@ export default function EditorPage() {
             }}
           />
 
-          <span className={`text-xs px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${
-            saveStatus === 'Saved' 
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-[#059669]' 
+          <span className={`text-xs px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${saveStatus === 'Saved'
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-[#059669]'
               : 'bg-amber-900/10 border-amber-500/20 text-amber-600 dark:text-amber-400'
-          }`}>
+            }`}>
             <CheckCircle size={12} />
             {saveStatus}
           </span>
@@ -470,11 +469,10 @@ export default function EditorPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsPublishModalOpen(true)}
-            className={`px-4 py-1.5 rounded-lg border text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
-              blog?.status === 'published' 
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-705 dark:text-[#059669] hover:bg-emerald-500/20' 
+            className={`px-4 py-1.5 rounded-lg border text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${blog?.status === 'published'
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-705 dark:text-[#059669] hover:bg-emerald-500/20'
                 : 'bg-slate-100 dark:bg-aether-container-low border-slate-205 dark:border-white/5 text-slate-600 dark:text-aether-outline hover:bg-slate-200 dark:hover:bg-white/5'
-            }`}
+              }`}
           >
             {blog?.status === 'published' ? `Published (${blog.visibility})` : 'Publish'}
           </button>
@@ -528,7 +526,7 @@ export default function EditorPage() {
 
       {/* Main Workspace split panel */}
       <div className="flex-1 flex overflow-hidden min-h-0 relative z-10">
-        
+
         {/* Left Sidebar - Outline Config */}
         <aside className="w-[350px] border-r border-slate-200 dark:border-white/10 bg-white/70 dark:bg-aether-container/50 backdrop-blur-2xl flex flex-col overflow-hidden shrink-0 shadow-2xl z-10 transition-all duration-300">
           <div className="p-4 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-aether-container-lowest/50 flex justify-between items-center shrink-0">
@@ -575,20 +573,19 @@ export default function EditorPage() {
             ) : (
               <div className="space-y-2.5">
                 {blog.outline.map((section, idx) => (
-                  <div 
+                  <div
                     key={idx}
                     className="p-3.5 glass-panel bg-white/95 dark:bg-aether-container-lowest/40 hover:border-emerald-500/30 dark:hover:border-aether-primary/30 border border-slate-200 dark:border-white/5 rounded-2xl flex items-start justify-between group transition-all duration-200"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
-                          section.level === 2 
-                            ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:bg-aether-secondary/10 dark:text-aether-secondary dark:border-aether-secondary/20' 
+                        <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${section.level === 2
+                            ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:bg-aether-secondary/10 dark:text-aether-secondary dark:border-aether-secondary/20'
                             : 'bg-indigo-500/10 text-indigo-705 border-indigo-550/20 dark:bg-aether-primary/10 dark:text-aether-primary dark:border-aether-primary/20'
-                        }`}>
+                          }`}>
                           H{section.level}
                         </span>
-                        
+
                         <input
                           type="text"
                           className="bg-transparent border-none text-slate-800 dark:text-white text-xs font-bold focus:outline-none focus:ring-0 p-0 w-48"
@@ -606,28 +603,28 @@ export default function EditorPage() {
 
                     {/* Actions on outline hover */}
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                      <button 
+                      <button
                         onClick={() => toggleSectionLevel(idx)}
                         className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 cursor-pointer"
                         title="Toggle Header Level"
                       >
                         <Edit2 size={10} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => moveOutlineSection(idx, 'up')}
                         disabled={idx === 0}
                         className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 disabled:opacity-20 cursor-pointer"
                       >
                         <ArrowUp size={10} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => moveOutlineSection(idx, 'down')}
                         disabled={idx === blog.outline.length - 1}
                         className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 disabled:opacity-20 cursor-pointer"
                       >
                         <ArrowDown size={10} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => deleteOutlineSection(idx)}
                         className="p-1 text-slate-400 dark:text-slate-500 hover:text-red-400 cursor-pointer"
                       >
@@ -644,7 +641,7 @@ export default function EditorPage() {
           {blog?.outline?.length > 0 && (
             <div className="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-aether-container-lowest/30 space-y-3 shrink-0">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Append Blueprint Section</span>
-              
+
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -653,7 +650,7 @@ export default function EditorPage() {
                   value={newHeadingTitle}
                   onChange={(e) => setNewHeadingTitle(e.target.value)}
                 />
-                
+
                 <select
                   className="px-2 py-1.5 input-recessed rounded-lg text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-emerald-500 dark:focus:border-aether-secondary transition"
                   value={newHeadingLevel}
@@ -695,7 +692,7 @@ export default function EditorPage() {
           {/* Subtle atmosphere glows */}
           <div className="nebula-glow bg-aether-primary w-[300px] h-[300px] top-[20%] left-[10%] rounded-full opacity-5 pointer-events-none"></div>
           <div className="nebula-glow bg-aether-secondary w-[300px] h-[300px] bottom-[20%] right-[10%] rounded-full opacity-5 pointer-events-none"></div>
-          
+
           <div className="w-full max-w-3xl relative">
             {inlineLoading && (
               <div className="absolute top-4 right-4 flex items-center gap-2 bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-205 dark:border-emerald-500/20 text-emerald-800 dark:text-emerald-400 px-3 py-1.5 rounded-lg text-xs backdrop-blur shadow z-10">
@@ -706,7 +703,7 @@ export default function EditorPage() {
 
             {/* Selection Popup Menu */}
             {showBubbleMenu && editor && (
-              <div 
+              <div
                 style={{ top: bubbleMenuPos.top, left: bubbleMenuPos.left }}
                 className="absolute z-30 flex items-center bg-white dark:bg-aether-container/95 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl p-1.5 gap-1 shrink-0 -translate-x-1/2 backdrop-blur-md transition-colors"
               >
@@ -717,7 +714,7 @@ export default function EditorPage() {
                   <Sparkles size={11} className="text-emerald-600 dark:text-aether-secondary" />
                   Humanize
                 </button>
-                
+
                 <button
                   onClick={() => handleInlineEdit('expand')}
                   className="px-2.5 py-1 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-[11px] font-semibold transition cursor-pointer"
@@ -770,7 +767,7 @@ export default function EditorPage() {
           <div className="glass-panel w-full max-w-md p-8 rounded-3xl space-y-6" style={{ background: theme === 'light' ? '#fff' : 'rgba(15, 23, 42, 0.9)', borderColor: theme === 'light' ? 'rgba(0,0,0,0.1)' : 'rgba(255, 255, 255, 0.1)' }}>
             <div className="flex justify-between items-center">
               <h3 className={`text-lg font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Publish Settings</h3>
-              <button 
+              <button
                 onClick={() => setIsPublishModalOpen(false)}
                 className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer"
               >
@@ -786,11 +783,10 @@ export default function EditorPage() {
                   <button
                     type="button"
                     onClick={() => setPublishVisibility('public')}
-                    className={`py-3 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1 cursor-pointer transition ${
-                      publishVisibility === 'public'
+                    className={`py-3 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1 cursor-pointer transition ${publishVisibility === 'public'
                         ? 'bg-emerald-500/10 border-emerald-550 text-emerald-700 dark:bg-aether-secondary/15 dark:border-aether-secondary dark:text-aether-secondary'
                         : 'bg-slate-50 dark:bg-aether-container-low border-slate-200 dark:border-white/5 text-slate-500 dark:text-aether-outline hover:bg-slate-100 dark:hover:bg-white/5'
-                    }`}
+                      }`}
                   >
                     <span className="font-bold">Public Feed</span>
                     <span className="text-[9px] opacity-75">Visible to everyone</span>
@@ -798,11 +794,10 @@ export default function EditorPage() {
                   <button
                     type="button"
                     onClick={() => setPublishVisibility('private')}
-                    className={`py-3 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1 cursor-pointer transition ${
-                      publishVisibility === 'private'
+                    className={`py-3 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1 cursor-pointer transition ${publishVisibility === 'private'
                         ? 'bg-indigo-500/10 border-indigo-550 text-indigo-700 dark:bg-aether-primary/15 dark:border-aether-primary dark:text-aether-primary'
                         : 'bg-slate-50 dark:bg-aether-container-low border-slate-200 dark:border-white/5 text-slate-500 dark:text-aether-outline hover:bg-slate-100 dark:hover:bg-white/5'
-                    }`}
+                      }`}
                   >
                     <span className="font-bold">Private Blog</span>
                     <span className="text-[9px] opacity-75">Only you can read it</span>
@@ -830,7 +825,7 @@ export default function EditorPage() {
                 >
                   {blog?.status === 'published' ? 'Save Changes' : 'Go Live Now'}
                 </button>
-                
+
                 {blog?.status === 'published' && (
                   <button
                     type="button"
