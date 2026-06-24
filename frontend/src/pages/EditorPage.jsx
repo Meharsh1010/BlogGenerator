@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { 
   ArrowLeft, Save, CheckCircle, Sparkles, Plus, Trash2, 
@@ -169,7 +170,7 @@ export default function EditorPage() {
     editor.commands.setContent('<p className="shimmer-text">Aligning cognitive models and initializing streams...</p>');
 
     let accumulatedHtml = '';
-    const eventSource = new EventSource(`/api/blogs/${id}/stream`, { withCredentials: true });
+    const eventSource = new EventSource(`${API_BASE_URL}/api/blogs/${id}/stream`, { withCredentials: true });
 
     eventSource.onmessage = (event) => {
       if (event.data === '[DONE]') {
